@@ -1,0 +1,9 @@
+!.gitignore
+hoist
+hoist/*
+methyl
+methyl/*
+thinker-qt
+thinker-qt/*
+resources/silk
+resources/silk/*

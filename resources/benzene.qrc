@@ -1,0 +1,40 @@
+<!DOCTYPE RCC>
+<RCC version="1.0"><qresource>
+	<file>1x1.png</file>
+
+	<file>cursors/cursor-arrow.png</file>
+	<file>cursors/cursor-hand.png</file>
+	<file>cursors/cursor-sizeb.png</file>
+	<file>cursors/cursor-wait.png</file>
+	<file>cursors/cursor-busy.png</file>
+	<file>cursors/cursor-hsplit.png</file>
+	<file>cursors/cursor-sizef.png</file>
+	<file>cursors/cursor-whatsthis.png</file>
+	<file>cursors/cursor-closedhand.png</file>
+	<file>cursors/cursor-ibeam.png</file>
+	<file>cursors/cursor-sizeh.png</file>
+	<file>cursors/cursor-cross.png</file>
+	<file>cursors/cursor-openhand.png</file>
+	<file>cursors/cursor-sizev.png</file>
+	<file>cursors/cursor-forbidden.png</file>
+	<file>cursors/cursor-sizeall.png</file>
+	<file>cursors/cursor-uparrow.png</file>
+	<file>cursors/mousecursor_unavailable.png</file>
+
+	<file>toolbar/new.png</file>
+	<file>toolbar/open.png</file>
+	<file>toolbar/save.png</file>
+	<file>toolbar/cut.png</file>
+	<file>toolbar/copy.png</file>
+	<file>toolbar/paste.png</file>
+
+        <!-- http://www.famfamfam.com/lab/icons/silk/previews/index_abc.png -->
+        <file>silk/exclamation.png</file>
+        <file>silk/error.png</file>
+        <file>silk/information.png</file>
+        <file>silk/mouse.png</file>
+        <file>silk/hourglass.png</file>
+        <file>silk/cursor.png</file>
+        <file>silk/eye.png</file>
+
+</qresource></RCC>
