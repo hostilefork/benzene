@@ -156,7 +156,7 @@ private:
     // it has tabs on although it reuses the various tool windows).  But for
     // now, multiple documents require multiple application instances.
 
-    optional<methyl::Tree<methyl::Accessor>> _root;
+    optional<methyl::Tree<methyl::Accessor>> _document;
 
     shared_ptr<methyl::Context> _dummyContext;
 

@@ -475,9 +475,13 @@ void ApplicationBase::queueInvokeOperationMaybe (
 
 Node<Accessor const> ApplicationBase::getDocument () const {
 
-    // REVIEW: What context should be given to the
+    hopefully(not isDaemonThreadCurrent(), HERE);
+
+    // REVIEW: What context should be given for read only access to
+    // the document from arbitrary threads?
+
     return methyl::globalEngine->contextualNodeRef(
-        (*getWorker()._root).get(),
+        (*getWorker()._document).root(),
         methyl::globalEngine->contextForLookup()
     );
 }

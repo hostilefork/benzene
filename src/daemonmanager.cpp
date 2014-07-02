@@ -311,7 +311,7 @@ void DaemonManager::onDaemonCreateRequest (
 
     QWriteLocker lock (&_daemonMapLock);
 
-    auto newDescriptorRef = (*newDescriptor).get();
+    auto newDescriptorRef = (*newDescriptor).root();
 
     auto itType = _daemonMap.find(info);
     if (itType == _daemonMap.end()) {

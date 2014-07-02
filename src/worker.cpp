@@ -140,7 +140,7 @@ Worker::Worker (WorkerThread & workerThread) :
         [&]() {return worker.observerInEffect();}
     );
 
-    _root = Tree<Accessor>::create(globalRootOfDocumentTag);
+    _document = Tree<Accessor>::create(globalRootOfDocumentTag);
 
     _dummyContext = make_shared<Context>(HERE);
 
@@ -326,7 +326,7 @@ void Worker::receiveFirstHit (
     if (hit) {
         _hitListTree.push_back(hit);
         if (hit)
-            _hitListNode.push_back((*hit).get());
+            _hitListNode.push_back((*hit).root());
         else
             _hitListNode.push_back(nullopt);
     }
@@ -373,7 +373,7 @@ void Worker::receiveNextHit (
     if (_hitListTree.back() != hit) {
         _hitListTree.push_back(hit);
         if (hit)
-            _hitListNode.push_back((*hit).get());
+            _hitListNode.push_back((*hit).root());
         else
             _hitListNode.push_back(nullopt);
     }
@@ -413,7 +413,7 @@ void Worker::receiveLastHit (
     if (_hitListTree.back() != hit) {
         _hitListTree.push_back(hit);
         if (hit)
-            _hitListNode.push_back((*hit).get());
+            _hitListNode.push_back((*hit).root());
         else
             _hitListNode.push_back(nullopt);
     }
@@ -499,11 +499,11 @@ void Worker::syncOperation () {
 
     if ((_hitListTree.size() >= 2) and _hitListTree[0] and _hitListTree.back()) {
         if (*_hitListTree[0] == *_hitListTree.back()) {
-            newOperation = app.operationForRepress((*_hitListTree[0]).get());
+            newOperation = app.operationForRepress((*_hitListTree[0]).root());
         }
         else {
             newOperation = app.operationForLine(
-                (*_hitListTree[0]).get(), (*_hitListTree.back()).get()
+                (*_hitListTree[0]).root(), (*_hitListTree.back()).root()
             );
         }
     }
@@ -516,7 +516,7 @@ void Worker::syncOperation () {
     // A single element in the hit list is only offered as a "Press"
 
     if (_hitListTree.size() == 1) {
-        newOperation = app.operationForPress((*_hitListTree[0]).get());
+        newOperation = app.operationForPress((*_hitListTree[0]).root());
     }
 
     if (newOperation) {
@@ -546,7 +546,7 @@ Worker::~Worker () {
     _daemonManagerThread->shutdown();
     _daemonManagerThread.reset();
 
-    _root = nullopt;
+    _document = nullopt;
 
     delete methyl::globalEngine;
     methyl::globalEngine = nullptr;

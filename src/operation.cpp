@@ -43,7 +43,7 @@ methyl::Node<methyl::Accessor> OperationBase::getDocument() const {
     auto & worker = getApplication<ApplicationBase>().getWorker();
 
     return methyl::globalEngine->contextualNodeRef(
-        (*worker._root).get(), worker._dummyContext
+        (*worker._document).root(), worker._dummyContext
     );
 }
 
