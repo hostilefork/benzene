@@ -344,7 +344,7 @@ void ApplicationBase::onWorkerLoopExited () {
 
 
 void ApplicationBase::emitGlanceHit (
-    optional<Tree<Hit>> hit
+    optional<Tree<Hit>> && hit
 ) const
 {
     GUI
@@ -363,7 +363,7 @@ void ApplicationBase::emitGlanceHit (
 }
 
 
-void ApplicationBase::emitFirstHit(optional<Tree<Hit>> hit) const {
+void ApplicationBase::emitFirstHit(optional<Tree<Hit>> && hit) const {
     GUI
 
     unique_ptr<NodePrivate> nodePrivateOwned;
@@ -380,7 +380,7 @@ void ApplicationBase::emitFirstHit(optional<Tree<Hit>> hit) const {
 }
 
 
-void ApplicationBase::emitNextHit(optional<Tree<Hit>> hit) const {
+void ApplicationBase::emitNextHit(optional<Tree<Hit>> && hit) const {
     GUI
 
     unique_ptr<NodePrivate> nodePrivateOwned;
@@ -397,7 +397,7 @@ void ApplicationBase::emitNextHit(optional<Tree<Hit>> hit) const {
 }
 
 
-void ApplicationBase::emitLastHit (optional<Tree<Hit>> hit) const {
+void ApplicationBase::emitLastHit (optional<Tree<Hit>> && hit) const {
     GUI
 
     unique_ptr<NodePrivate> nodePrivateOwned;
@@ -415,7 +415,7 @@ void ApplicationBase::emitLastHit (optional<Tree<Hit>> hit) const {
 
 
 auto ApplicationBase::operationForPress (
-    Node<Hit const> hit
+    Node<Hit const> const & hit
 ) const
     -> optional<unique_ptr<OperationBase>>
 {
@@ -427,7 +427,7 @@ auto ApplicationBase::operationForPress (
 
 
 auto ApplicationBase::operationForRepress (
-    Node<Hit const> hit
+    Node<Hit const> const & hit
 ) const
     -> optional<unique_ptr<OperationBase>>
 {
@@ -452,8 +452,8 @@ auto ApplicationBase::operationForStroke (
 
 
 auto ApplicationBase::operationForLine (
-    Node<Hit const> startHit,
-    Node<Hit const> endHit
+    Node<Hit const> const & startHit,
+    Node<Hit const> const & endHit
 ) const
     -> optional<unique_ptr<OperationBase>>
 {
@@ -466,7 +466,7 @@ auto ApplicationBase::operationForLine (
 
 
 void ApplicationBase::queueInvokeOperationMaybe (
-    unique_ptr<OperationBase> operation
+    unique_ptr<OperationBase> && operation
 ) const
 {
     emit getWorker().queueInvokeOperationMaybe(operation.release());
@@ -483,7 +483,7 @@ Node<Accessor const> ApplicationBase::getDocument () const {
 }
 
 
-void ApplicationBase::onBeginInvokeOperation (QString message) {
+void ApplicationBase::onBeginInvokeOperation (QString const & message) {
 
     GUI
 
@@ -504,7 +504,10 @@ void ApplicationBase::onBeginInvokeOperation (QString message) {
 }
 
 
-void ApplicationBase::onEndInvokeOperation (bool success, QString message) {
+void ApplicationBase::onEndInvokeOperation (
+    bool success,
+    QString const & message
+) {
 
     GUI
 

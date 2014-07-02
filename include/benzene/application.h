@@ -233,13 +233,13 @@ signals:
     ) const;
 
 public:
-    void emitGlanceHit (optional<methyl::Tree<Hit>> hit) const;
+    void emitGlanceHit (optional<methyl::Tree<Hit>> && hit) const;
 
-    void emitFirstHit (optional<methyl::Tree<Hit>> hit) const;
+    void emitFirstHit (optional<methyl::Tree<Hit>> && hit) const;
 
-    void emitNextHit (optional<methyl::Tree<Hit>> hit) const;
+    void emitNextHit (optional<methyl::Tree<Hit>> && hit) const;
 
-    void emitLastHit (optional<methyl::Tree<Hit>> hit) const;
+    void emitLastHit (optional<methyl::Tree<Hit>> && hit) const;
 
 
 friend class OperationStatusBar;
@@ -257,11 +257,11 @@ private:
 
 public:
     virtual optional<unique_ptr<OperationBase>> operationForPress (
-        methyl::Node<Hit const> hit
+        methyl::Node<Hit const> const & hit
     ) const;
 
     virtual optional<unique_ptr<OperationBase>> operationForRepress (
-        methyl::Node<Hit const> hit
+        methyl::Node<Hit const> const & hit
     ) const;
 
     virtual optional<unique_ptr<OperationBase>> operationForStroke (
@@ -269,19 +269,19 @@ public:
     ) const;
 
     virtual optional<unique_ptr<OperationBase>> operationForLine (
-        methyl::Node<Hit const> startHit,
-        methyl::Node<Hit const> endHit
+        methyl::Node<Hit const> const & startHit,
+        methyl::Node<Hit const> const & endHit
     ) const;
 
 public:
     void queueInvokeOperationMaybe (
-        unique_ptr<OperationBase> operation
+        unique_ptr<OperationBase> && operation
     ) const;
 
 private slots:
-    void onBeginInvokeOperation (QString message);
+    void onBeginInvokeOperation (QString const & message);
 
-    void onEndInvokeOperation (bool success, QString message);
+    void onEndInvokeOperation (bool success, QString const & message);
 
     void onHoveringOperation (QString message);
 

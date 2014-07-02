@@ -50,7 +50,7 @@ ThinkerManager & DaemonBase::getThinkerManager () {
 
 
 optional<ThinkerPresentBase> DaemonBase::tryGetDaemonPresentPrivate (
-    methyl::Tree<Descriptor> descriptor,
+    methyl::Tree<Descriptor> && descriptor,
     DaemonFactory factory,
     std::type_info const & info
 ) {

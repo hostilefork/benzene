@@ -99,12 +99,12 @@ public:
 
 friend class DaemonManager;
 private:
-    // We poke the owned descriptor in here behind the curtain so that the
-    // derived class doesn't have to pass the owned descriptor through.
+    // We poke the descriptor in here behind the curtain so that the
+    // derived class doesn't have to pass the descriptor through.
     // hack for the moment is to make it optional as you can't default-init
-    // a Tree, but consider extracting the NodePrivate or other trickery
+    // a Node, but consider extracting the NodePrivate or other trickery
 
-    optional<methyl::Tree<Descriptor>> _descriptor;
+    optional<methyl::Node<Descriptor const>> _descriptor;
 
     shared_ptr<methyl::Context> _context;
 
@@ -146,7 +146,7 @@ private:
     );
 
     static optional<ThinkerPresentBase> tryGetDaemonPresentPrivate (
-        methyl::Tree<Descriptor> descriptor,
+        methyl::Tree<Descriptor> && descriptor,
         DaemonFactory factory,
         std::type_info const & info
     );

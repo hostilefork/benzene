@@ -282,12 +282,10 @@ void Worker::receiveGlanceHit (
     optional<methyl::Tree<Hit>> hit
         = methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context);
 
-    _hitList.clear();
-    _ownedHits.clear();
+    _hitListTree.clear();
 
     if (hit) {
-        _hitList.push_back((*hit).get());
-        _ownedHits.insert(std::move(*hit));
+        _hitListTree.push_back(hit);
 
         _status.assign(OperationStatus::Glancing, HERE);
 
@@ -323,12 +321,14 @@ void Worker::receiveFirstHit (
     optional<methyl::Tree<Hit>> hit
         = methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context);
 
-    _hitList.clear();
-    _ownedHits.clear();
+    _hitListTree.clear();
 
     if (hit) {
-        _hitList.push_back((*hit).get());
-        _ownedHits.insert(std::move(*hit));
+        _hitListTree.push_back(hit);
+        if (hit)
+            _hitListNode.push_back((*hit).get());
+        else
+            _hitListNode.push_back(nullopt);
     }
     else {
         // What we really want to do if you mouse down on a nullopt
@@ -352,27 +352,6 @@ void Worker::receiveFirstHit (
 }
 
 
-void Worker::addHitHelper(optional<methyl::Tree<Hit>> hit) {
-    if (hit) {
-        if (not (*_hitList.back())->sameStructureAs((*hit).get())) {
-            _hitList.push_back((*hit).get());
-            _ownedHits.insert(std::move(*hit));
-        } else {
-            // Do not push two hits in a row if they are identical
-        }
-    } else {
-        if (not _hitList.back()) {
-            // Do nothing if the last element in the list is a nullopt.
-            // They indicate discontinuity, so it's wasteful to have
-            // multiple nullopts to check for in a row)
-        } else {
-            // Previous wasn't a nullopt, so push one
-            _hitList.push_back(nullopt);
-        }
-    }
-}
-
-
 void Worker::receiveNextHit (
     methyl::NodePrivate * ownedHit,
     shared_ptr<methyl::Context> const & context
@@ -383,16 +362,21 @@ void Worker::receiveNextHit (
 
     _status.hopefullyEqualTo(OperationStatus::Pending, HERE);
 
-    if (_hitList.empty()) {
+    if (_hitListTree.empty()) {
         // See comments in receiveFirstHit about why we ignore all
         // hits after a nullopt, and why it should be done better
         // with the drag and drop UI.
         return;
     }
 
-    addHitHelper(
-        methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context)
-    );
+    auto hit = methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context);
+    if (_hitListTree.back() != hit) {
+        _hitListTree.push_back(hit);
+        if (hit)
+            _hitListNode.push_back((*hit).get());
+        else
+            _hitListNode.push_back(nullopt);
+    }
 
     syncOperation();
 
@@ -416,7 +400,7 @@ void Worker::receiveLastHit (
 
     _status.hopefullyEqualTo(OperationStatus::Pending, HERE);
 
-    if (_hitList.empty()) {
+    if (_hitListTree.empty()) {
         // See comments in receiveFirstHit about why we ignore all
         // hits after a nullopt, and why it should be done better
         // with the drag and drop UI.
@@ -425,9 +409,14 @@ void Worker::receiveLastHit (
         return;
     }
 
-    addHitHelper(
-        methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context)
-    );
+    auto hit = methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context);
+    if (_hitListTree.back() != hit) {
+        _hitListTree.push_back(hit);
+        if (hit)
+            _hitListNode.push_back((*hit).get());
+        else
+            _hitListNode.push_back(nullopt);
+    }
 
     syncOperation();
 
@@ -487,10 +476,17 @@ void Worker::syncOperation () {
 
     auto & app = getApplication<ApplicationBase>();
 
+    if (_hitListTree.empty()) {
+        _operation = nullopt;
+        return;
+    }
+
+    hopefully(_hitListTree[0] != nullopt, HERE);
+
     // First offer we make in the pecking order is a "stroke", for any
     // number of hits.
 
-    newOperation = app.operationForStroke(_hitList);
+    newOperation = app.operationForStroke(_hitListNode);
 
     if (newOperation) {
         _operation = std::move(*newOperation);
@@ -501,13 +497,13 @@ void Worker::syncOperation () {
     // the opportunity to think of it as a "Repress".  But if it
     // starts and ends on different hits, it is offered as a "Line"
 
-    if ((_hitList.size() >= 2) and _hitList[0] and _hitList.back()) {
-        if ((*_hitList[0])->sameStructureAs(*_hitList.back())) {
-            newOperation = app.operationForRepress(*_hitList[0]);
+    if ((_hitListTree.size() >= 2) and _hitListTree[0] and _hitListTree.back()) {
+        if (*_hitListTree[0] == *_hitListTree.back()) {
+            newOperation = app.operationForRepress((*_hitListTree[0]).get());
         }
         else {
             newOperation = app.operationForLine(
-                *_hitList[0], *_hitList.back()
+                (*_hitListTree[0]).get(), (*_hitListTree.back()).get()
             );
         }
     }
@@ -519,8 +515,8 @@ void Worker::syncOperation () {
 
     // A single element in the hit list is only offered as a "Press"
 
-    if ((_hitList.size() == 1) and _hitList[0]) {
-        newOperation = app.operationForPress(*_hitList[0]);
+    if (_hitListTree.size() == 1) {
+        newOperation = app.operationForPress((*_hitListTree[0]).get());
     }
 
     if (newOperation) {

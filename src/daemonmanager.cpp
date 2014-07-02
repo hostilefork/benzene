@@ -125,7 +125,7 @@ DaemonManager::DaemonManager () {
 
 
 optional<ThinkerPresentBase> DaemonManager::createOrRequeueDaemon (
-    methyl::Tree<Descriptor> descriptor,
+    methyl::Tree<Descriptor> && descriptor,
     DaemonFactory factory,
     std::type_info const & info,
     qint64 requestTick
@@ -181,7 +181,7 @@ void DaemonManager::beforeThreadDetach (
 
 
 optional<ThinkerPresentBase> DaemonManager::tryGetDaemonPresent (
-    methyl::Tree<Descriptor> descriptor,
+    methyl::Tree<Descriptor> && descriptor,
     DaemonFactory factory,
     std::type_info const & info
 ) {
@@ -201,7 +201,7 @@ optional<ThinkerPresentBase> DaemonManager::tryGetDaemonPresent (
         QReadLocker lock (&_daemonMapLock);
         auto itType = _daemonMap.find(&info);
         if (itType != _daemonMap.end()) {
-            auto it = itType->second.find(descriptor.get());
+            auto it = itType->second.find(descriptor);
             if (it != itType->second.end()) {
                 auto & daemon = dynamic_cast<DaemonBase &>(
                     getThinkerBase(it->second)
@@ -235,22 +235,11 @@ void DaemonManager::onDaemonCreateRequest (
 
     hopefully(newDescriptor != nullopt, HERE);
 
-    auto createPresent = [&](Tree<Descriptor> descriptor)
+    auto createPresent = [&](Node<Descriptor const> descriptor)
         -> ThinkerPresentBase
     {
         QElapsedTimer timer;
         timer.start();
-
-        // The descriptor was created with a different observation context
-        // than we want the Daemon's observations to be using.  So all the
-        // observations need to be made through a new monitoring facility
-        // based on the observer in this Daemon.
-
-        auto context = make_shared<Context>(HERE);
-        Node<Descriptor const> descriptorRef
-            = methyl::globalEngine->contextualNodeRef(
-                descriptor.get(), context
-            );
 
         // This is tricky, because we are being asked to tell the observer
         // all the roots of trees we want to watch and become invalid if
@@ -271,6 +260,16 @@ void DaemonManager::onDaemonCreateRequest (
         auto & app = getApplication<ApplicationBase>();
         auto & worker = app.getWorker();
 
+        // The descriptor was created with a different observation context
+        // than we want the Daemon's observations to be using.  So all the
+        // observations need to be made through a new monitoring facility
+        // based on the observer in this Daemon.
+
+        auto context = make_shared<Context>(HERE);
+        descriptor = methyl::globalEngine->contextualNodeRef(
+            descriptor, context
+        );
+
         auto observer = methyl::Observer::create(app.getDocument(), HERE);
 
         {
@@ -284,7 +283,7 @@ void DaemonManager::onDaemonCreateRequest (
             worker._threadsToObservers[QThread::currentThread()] = observer;
         }
 
-        unique_ptr<ThinkerBase> thinker = factory(descriptorRef);
+        unique_ptr<ThinkerBase> thinker = factory(descriptor);
 
         {
             // Further running of the Daemon will be from the thread
@@ -301,7 +300,7 @@ void DaemonManager::onDaemonCreateRequest (
         // but it's more efficient to poke them into the Daemon itself
         // to avoid the hash table storage and lookup.
 
-        daemon._descriptor = std::move(descriptor);
+        daemon._descriptor = descriptor;
         daemon._context = context;
         daemon._lastRequestTick = requestTick;
         daemon._msecsUsed = timer.elapsed();
@@ -312,11 +311,12 @@ void DaemonManager::onDaemonCreateRequest (
 
     QWriteLocker lock (&_daemonMapLock);
 
+    auto newDescriptorRef = (*newDescriptor).get();
+
     auto itType = _daemonMap.find(info);
     if (itType == _daemonMap.end()) {
-        auto newDescriptorRef = (*newDescriptor).get();
         _daemonMap[info].insert(std::make_pair(
-            newDescriptorRef, createPresent(std::move(*newDescriptor))
+            std::move(*newDescriptor), createPresent(newDescriptorRef)
         ));
     } else {
         // It is possible that the same Daemon descriptor will be queued
@@ -328,11 +328,10 @@ void DaemonManager::onDaemonCreateRequest (
         // a simple implementation but a little bit "sloppier" than I
         // usually like :-/ but going with it until there's a problem.
 
-        auto itPair = itType->second.find((*newDescriptor).get());
+        auto itPair = itType->second.find(*newDescriptor);
         if (itPair == itType->second.end()) {
-            auto newDescriptorRef = (*newDescriptor).get();
             itType->second.insert(std::make_pair(
-                newDescriptorRef, createPresent(std::move(*newDescriptor))
+                std::move(*newDescriptor), createPresent(newDescriptorRef)
             ));
         } else {
             // We'll get here if there was a request for this daemon already
@@ -367,9 +366,7 @@ void DaemonManager::onDaemonCreateRequest (
                 // created - that's excessive.
 
                 // http://www.cplusplus.com/forum/general/26950/
-                itPair->second = createPresent(
-                    std::move(*oldDaemon._descriptor)
-                );
+                itPair->second = createPresent(*(oldDaemon._descriptor));
             } else {
                 // a request for this descriptor already serviced; ignore.
             }
