@@ -19,15 +19,15 @@
 // See http://benzene.hostilefork.com/ for more information on this project
 //
 
-#include "methyl/node.h"
+#include "methyl/accessor.h"
 #include "worker.h"
 
 #include "benzene/widget.h"
 
 using methyl::NodePrivate;
+using methyl::Accessor;
+using methyl::Tree;
 using methyl::Node;
-using methyl::RootNode;
-using methyl::NodeRef;
 
 using methyl::Context;
 

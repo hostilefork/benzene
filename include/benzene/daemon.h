@@ -25,7 +25,7 @@
 
 #include <unordered_set>
 
-#include "methyl/node.h"
+#include "methyl/accessor.h"
 #include "methyl/observer.h"
 #include "methyl/engine.h"
 
@@ -38,7 +38,7 @@ namespace benzene {
 // As with Hit, this is just a typedef.  Whether it is necessary or not I
 // don't know, but for now it helps with documentation.
 
-typedef methyl::Node Descriptor;
+typedef methyl::Accessor Descriptor;
 
 
 template <class> class Daemon;
@@ -56,7 +56,7 @@ class DaemonManager;
 // about the DaemonBase.
 
 typedef std::function<
-    unique_ptr<ThinkerBase>(methyl::NodeRef<Descriptor const>)
+    unique_ptr<ThinkerBase>(methyl::Node<Descriptor const>)
 > DaemonFactory;
 
 
@@ -102,9 +102,9 @@ private:
     // We poke the owned descriptor in here behind the curtain so that the
     // derived class doesn't have to pass the owned descriptor through.
     // hack for the moment is to make it optional as you can't default-init
-    // a RootNode, but consider extracting the NodePrivate or other trickery
+    // a Tree, but consider extracting the NodePrivate or other trickery
 
-    optional<methyl::RootNode<Descriptor>> _descriptor;
+    optional<methyl::Tree<Descriptor>> _descriptor;
 
     shared_ptr<methyl::Context> _context;
 
@@ -124,7 +124,7 @@ private:
 
     qint64 _msecsUsed;
 
-    std::unordered_set<methyl::NodeRef<Descriptor const>> _dependents;
+    std::unordered_set<methyl::Node<Descriptor const>> _dependents;
 
 
 template<class> friend class Daemon;
@@ -146,7 +146,7 @@ private:
     );
 
     static optional<ThinkerPresentBase> tryGetDaemonPresentPrivate (
-        methyl::RootNode<Descriptor> descriptor,
+        methyl::Tree<Descriptor> descriptor,
         DaemonFactory factory,
         std::type_info const & info
     );
@@ -328,14 +328,14 @@ optional<typename T::Snapshot> trySnapshotDaemon(
     );
 
     DaemonFactory factory (
-        [] (methyl::NodeRef<Descriptor const> descriptor) {
+        [] (methyl::Node<Descriptor const> descriptor) {
             return unique_ptr<ThinkerBase> (
                 new T (T::unpackDescriptor(descriptor))
             );
         }
     );
 
-    methyl::RootNode<Descriptor> descriptor = T::packDescriptor (
+    methyl::Tree<Descriptor> descriptor = T::packDescriptor (
         std::forward<Args>(args)...
     );
 

@@ -192,7 +192,7 @@ public:
 
 
 public:
-    methyl::NodeRef<methyl::Node const> getDocument() const;
+    methyl::Node<methyl::Accessor const> getDocument() const;
 
 
     // Originally benzeneEvent was in an interface that could be multiply
@@ -233,13 +233,13 @@ signals:
     ) const;
 
 public:
-    void emitGlanceHit (optional<methyl::RootNode<Hit>> hit) const;
+    void emitGlanceHit (optional<methyl::Tree<Hit>> hit) const;
 
-    void emitFirstHit (optional<methyl::RootNode<Hit>> hit) const;
+    void emitFirstHit (optional<methyl::Tree<Hit>> hit) const;
 
-    void emitNextHit (optional<methyl::RootNode<Hit>> hit) const;
+    void emitNextHit (optional<methyl::Tree<Hit>> hit) const;
 
-    void emitLastHit (optional<methyl::RootNode<Hit>> hit) const;
+    void emitLastHit (optional<methyl::Tree<Hit>> hit) const;
 
 
 friend class OperationStatusBar;
@@ -257,20 +257,20 @@ private:
 
 public:
     virtual optional<unique_ptr<OperationBase>> operationForPress (
-        methyl::NodeRef<Hit const> hit
+        methyl::Node<Hit const> hit
     ) const;
 
     virtual optional<unique_ptr<OperationBase>> operationForRepress (
-        methyl::NodeRef<Hit const> hit
+        methyl::Node<Hit const> hit
     ) const;
 
     virtual optional<unique_ptr<OperationBase>> operationForStroke (
-        std::vector<optional<methyl::NodeRef<Hit const>>> const & hitList
+        std::vector<optional<methyl::Node<Hit const>>> const & hitList
     ) const;
 
     virtual optional<unique_ptr<OperationBase>> operationForLine (
-        methyl::NodeRef<Hit const> startHit,
-        methyl::NodeRef<Hit const> endHit
+        methyl::Node<Hit const> startHit,
+        methyl::Node<Hit const> endHit
     ) const;
 
 public:
@@ -299,7 +299,7 @@ private slots:
 // benzene::Application<T>
 //
 // Templated class you should use as the base class for your new Benzene
-// application type.  The parameter is the Node accessor class that is
+// application type.  The parameter is the Accessoraccessor class that is
 // used to represent documents.
 //
 // Because BenzeneApplication is derived from QApplication, you should put
@@ -330,12 +330,12 @@ public:
     }
 
 public:
-    static methyl::NodeRef<T const> getDocument () {
+    static methyl::Node<T const> getDocument () {
         auto app = dynamic_cast<ApplicationBase *>(
             QApplication::instance()
         );
         // REVIEW: Should we check?  Dereference may be unsafe.
-        return *methyl::NodeRef<T>::checked(app->getDocument());
+        return *methyl::Node<T>::checked(app->getDocument());
     }
 
 public:

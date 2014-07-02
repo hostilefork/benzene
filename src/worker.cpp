@@ -23,8 +23,8 @@
 #include "benzene/application.h"
 
 using methyl::NodePrivate;
-using methyl::RootNode;
-using methyl::Node;
+using methyl::Tree;
+using methyl::Accessor;
 using methyl::Tag;
 using methyl::Observer;
 using methyl::Context;
@@ -140,7 +140,7 @@ Worker::Worker (WorkerThread & workerThread) :
         [&]() {return worker.observerInEffect();}
     );
 
-    _root = RootNode<Node>::create(globalRootOfDocumentTag);
+    _root = Tree<Accessor>::create(globalRootOfDocumentTag);
 
     _dummyContext = make_shared<Context>(HERE);
 
@@ -279,8 +279,8 @@ void Worker::receiveGlanceHit (
         HERE
     );
 
-    optional<methyl::RootNode<Hit>> hit
-        = methyl::globalEngine->reconstituteRootNode<Hit>(ownedHit, context);
+    optional<methyl::Tree<Hit>> hit
+        = methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context);
 
     _hitList.clear();
     _ownedHits.clear();
@@ -320,8 +320,8 @@ void Worker::receiveFirstHit (
         _hoverTimerId = nullopt;
     }
 
-    optional<methyl::RootNode<Hit>> hit
-        = methyl::globalEngine->reconstituteRootNode<Hit>(ownedHit, context);
+    optional<methyl::Tree<Hit>> hit
+        = methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context);
 
     _hitList.clear();
     _ownedHits.clear();
@@ -352,7 +352,7 @@ void Worker::receiveFirstHit (
 }
 
 
-void Worker::addHitHelper(optional<methyl::RootNode<Hit>> hit) {
+void Worker::addHitHelper(optional<methyl::Tree<Hit>> hit) {
     if (hit) {
         if (not (*_hitList.back())->sameStructureAs((*hit).get())) {
             _hitList.push_back((*hit).get());
@@ -391,7 +391,7 @@ void Worker::receiveNextHit (
     }
 
     addHitHelper(
-        methyl::globalEngine->reconstituteRootNode<Hit>(ownedHit, context)
+        methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context)
     );
 
     syncOperation();
@@ -426,7 +426,7 @@ void Worker::receiveLastHit (
     }
 
     addHitHelper(
-        methyl::globalEngine->reconstituteRootNode<Hit>(ownedHit, context)
+        methyl::globalEngine->reconstituteTree<Hit>(ownedHit, context)
     );
 
     syncOperation();
@@ -463,7 +463,7 @@ void Worker::invokeOperation (unique_ptr<OperationBase> operation) {
 
     _daemonManagerThread->getManager().ensureAllDaemonsPaused(HERE);
 
-    optional<RootNode<methyl::Error>> result = operation->invoke();
+    optional<Tree<methyl::Error>> result = operation->invoke();
 
     _daemonManagerThread->getManager().ensureValidDaemonsResumed(HERE);
 

@@ -23,7 +23,7 @@
 #define BENZENE_WIDGET_H
 
 #include "methyl/defs.h"
-#include "methyl/node.h"
+#include "methyl/accessor.h"
 #include "operation.h"
 #include "daemon.h"
 #include "hit.h"
@@ -88,7 +88,7 @@ private slots:
 
 
 public:
-    virtual optional<methyl::RootNode<Hit>> makeHitForPoint (
+    virtual optional<methyl::Tree<Hit>> makeHitForPoint (
         QPoint const & point
     ) const = 0;
 

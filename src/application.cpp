@@ -32,9 +32,9 @@
 
 using std::vector;
 
+using methyl::Accessor;
 using methyl::Node;
-using methyl::NodeRef;
-using methyl::RootNode;
+using methyl::Tree;
 using methyl::NodePrivate;
 
 using methyl::Context;
@@ -344,7 +344,7 @@ void ApplicationBase::onWorkerLoopExited () {
 
 
 void ApplicationBase::emitGlanceHit (
-    optional<RootNode<Hit>> hit
+    optional<Tree<Hit>> hit
 ) const
 {
     GUI
@@ -354,7 +354,7 @@ void ApplicationBase::emitGlanceHit (
 
     if (hit) {
         std::tie(nodePrivateOwned, context)
-            = methyl::globalEngine->dissectRootNode(std::move(*hit));
+            = methyl::globalEngine->dissectTree(std::move(*hit));
         hit = nullopt;
         emit glanceHit(nodePrivateOwned.release(), context);
     } else {
@@ -363,7 +363,7 @@ void ApplicationBase::emitGlanceHit (
 }
 
 
-void ApplicationBase::emitFirstHit(optional<RootNode<Hit>> hit) const {
+void ApplicationBase::emitFirstHit(optional<Tree<Hit>> hit) const {
     GUI
 
     unique_ptr<NodePrivate> nodePrivateOwned;
@@ -371,7 +371,7 @@ void ApplicationBase::emitFirstHit(optional<RootNode<Hit>> hit) const {
 
     if (hit) {
         std::tie(nodePrivateOwned, context)
-            = methyl::globalEngine->dissectRootNode(std::move(*hit));
+            = methyl::globalEngine->dissectTree(std::move(*hit));
         hit = nullopt;
         emit firstHit(nodePrivateOwned.release(), context);
     } else {
@@ -380,7 +380,7 @@ void ApplicationBase::emitFirstHit(optional<RootNode<Hit>> hit) const {
 }
 
 
-void ApplicationBase::emitNextHit(optional<RootNode<Hit>> hit) const {
+void ApplicationBase::emitNextHit(optional<Tree<Hit>> hit) const {
     GUI
 
     unique_ptr<NodePrivate> nodePrivateOwned;
@@ -388,7 +388,7 @@ void ApplicationBase::emitNextHit(optional<RootNode<Hit>> hit) const {
 
     if (hit) {
         std::tie(nodePrivateOwned, context)
-            = methyl::globalEngine->dissectRootNode(std::move(*hit));
+            = methyl::globalEngine->dissectTree(std::move(*hit));
         hit = nullopt;
         emit nextHit(nodePrivateOwned.release(), context);
     } else {
@@ -397,7 +397,7 @@ void ApplicationBase::emitNextHit(optional<RootNode<Hit>> hit) const {
 }
 
 
-void ApplicationBase::emitLastHit (optional<RootNode<Hit>> hit) const {
+void ApplicationBase::emitLastHit (optional<Tree<Hit>> hit) const {
     GUI
 
     unique_ptr<NodePrivate> nodePrivateOwned;
@@ -405,7 +405,7 @@ void ApplicationBase::emitLastHit (optional<RootNode<Hit>> hit) const {
 
     if (hit) {
         std::tie(nodePrivateOwned, context)
-            = methyl::globalEngine->dissectRootNode(std::move(*hit));
+            = methyl::globalEngine->dissectTree(std::move(*hit));
         hit = nullopt;
         emit lastHit(nodePrivateOwned.release(), context);
     } else {
@@ -415,7 +415,7 @@ void ApplicationBase::emitLastHit (optional<RootNode<Hit>> hit) const {
 
 
 auto ApplicationBase::operationForPress (
-    NodeRef<Hit const> hit
+    Node<Hit const> hit
 ) const
     -> optional<unique_ptr<OperationBase>>
 {
@@ -427,7 +427,7 @@ auto ApplicationBase::operationForPress (
 
 
 auto ApplicationBase::operationForRepress (
-    NodeRef<Hit const> hit
+    Node<Hit const> hit
 ) const
     -> optional<unique_ptr<OperationBase>>
 {
@@ -439,7 +439,7 @@ auto ApplicationBase::operationForRepress (
 
 
 auto ApplicationBase::operationForStroke (
-    std::vector<optional<NodeRef<Hit const>>> const & hitList
+    std::vector<optional<Node<Hit const>>> const & hitList
 ) const
     -> optional<unique_ptr<OperationBase>>
 {
@@ -452,8 +452,8 @@ auto ApplicationBase::operationForStroke (
 
 
 auto ApplicationBase::operationForLine (
-    NodeRef<Hit const> startHit,
-    NodeRef<Hit const> endHit
+    Node<Hit const> startHit,
+    Node<Hit const> endHit
 ) const
     -> optional<unique_ptr<OperationBase>>
 {
@@ -473,7 +473,7 @@ void ApplicationBase::queueInvokeOperationMaybe (
 }
 
 
-NodeRef<Node const> ApplicationBase::getDocument () const {
+Node<Accessor const> ApplicationBase::getDocument () const {
 
     // REVIEW: What context should be given to the
     return methyl::globalEngine->contextualNodeRef(

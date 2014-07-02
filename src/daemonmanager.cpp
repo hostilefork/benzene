@@ -24,8 +24,8 @@
 
 #include "thinkerqt/thinkerrunner.h"
 
-using methyl::RootNode;
-using methyl::NodeRef;
+using methyl::Tree;
+using methyl::Node;
 using methyl::NodePrivate;
 using methyl::Context;
 
@@ -125,7 +125,7 @@ DaemonManager::DaemonManager () {
 
 
 optional<ThinkerPresentBase> DaemonManager::createOrRequeueDaemon (
-    methyl::RootNode<Descriptor> descriptor,
+    methyl::Tree<Descriptor> descriptor,
     DaemonFactory factory,
     std::type_info const & info,
     qint64 requestTick
@@ -140,7 +140,7 @@ optional<ThinkerPresentBase> DaemonManager::createOrRequeueDaemon (
     shared_ptr<Context> context;
 
     std::tie(nodePrivateOwned, context)
-        = methyl::globalEngine->dissectRootNode(std::move(descriptor));
+        = methyl::globalEngine->dissectTree(std::move(descriptor));
 
     // We have to pass the factory by value, but the lifetime of the
     // typeinfo is until end of program:
@@ -181,7 +181,7 @@ void DaemonManager::beforeThreadDetach (
 
 
 optional<ThinkerPresentBase> DaemonManager::tryGetDaemonPresent (
-    methyl::RootNode<Descriptor> descriptor,
+    methyl::Tree<Descriptor> descriptor,
     DaemonFactory factory,
     std::type_info const & info
 ) {
@@ -194,8 +194,8 @@ optional<ThinkerPresentBase> DaemonManager::tryGetDaemonPresent (
     QElapsedTimer timer;
     timer.start();
 
+    using methyl::Accessor;
     using methyl::Node;
-    using methyl::NodeRef;
 
     {
         QReadLocker lock (&_daemonMapLock);
@@ -228,14 +228,14 @@ void DaemonManager::onDaemonCreateRequest (
 ) {
     DAEMONMANAGER
 
-    optional<RootNode<Descriptor>> newDescriptor
-        = methyl::globalEngine->reconstituteRootNode<Descriptor>(
+    optional<Tree<Descriptor>> newDescriptor
+        = methyl::globalEngine->reconstituteTree<Descriptor>(
             descriptorOwned, contextOwned
         );
 
     hopefully(newDescriptor != nullopt, HERE);
 
-    auto createPresent = [&](RootNode<Descriptor> descriptor)
+    auto createPresent = [&](Tree<Descriptor> descriptor)
         -> ThinkerPresentBase
     {
         QElapsedTimer timer;
@@ -247,7 +247,7 @@ void DaemonManager::onDaemonCreateRequest (
         // based on the observer in this Daemon.
 
         auto context = make_shared<Context>(HERE);
-        NodeRef<Descriptor const> descriptorRef
+        Node<Descriptor const> descriptorRef
             = methyl::globalEngine->contextualNodeRef(
                 descriptor.get(), context
             );
@@ -358,7 +358,7 @@ void DaemonManager::onDaemonCreateRequest (
 
                 // We can't overwrite the key in place, only the value.
                 // Because the key is a NodeRef to the old descriptor,
-                // we have to use the old RootNode in order to keep
+                // we have to use the old Tree in order to keep
                 // that NodeRef good.  Requeuing "starts the Daemon from
                 // the top" which means the whole construction happens
                 // again, not just continue()ing or start()ing.  It all

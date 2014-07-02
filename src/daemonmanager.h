@@ -123,10 +123,10 @@ private:
     std::unordered_map<
         std::type_info const *,
         std::unordered_map<
-            methyl::NodeRef<Descriptor const>,
+            methyl::Node<Descriptor const>,
             ThinkerPresentBase,
-            methyl::structure_hash<methyl::NodeRef<Descriptor const>>,
-            methyl::structure_equal_to<methyl::NodeRef<Descriptor const>>
+            methyl::structure_hash<methyl::Node<Descriptor const>>,
+            methyl::structure_equal_to<methyl::Node<Descriptor const>>
         >,
         hash_dereferenced_type_info,
         equal_dereferenced_type_info
@@ -144,7 +144,7 @@ private:
     // the render or whatever triggered the request for a Daemon that has not
     // yet been started, it is handled by an independent thread.
     optional<ThinkerPresentBase> createOrRequeueDaemon (
-        methyl::RootNode<Descriptor> descriptor,
+        methyl::Tree<Descriptor> descriptor,
         DaemonFactory factory,
         std::type_info const & info,
         qint64 requestTick
@@ -173,7 +173,7 @@ public slots:
 
 public:
     optional<ThinkerPresentBase> tryGetDaemonPresent (
-        methyl::RootNode<Descriptor> descriptor,
+        methyl::Tree<Descriptor> descriptor,
         DaemonFactory factory,
         std::type_info const & info
     );

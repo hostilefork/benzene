@@ -22,7 +22,7 @@
 #ifndef BENZENE_HIT_H
 #define BENZENE_HIT_H
 
-#include "methyl/Node.h"
+#include "methyl/accessor.h"
 
 namespace benzene {
 
@@ -51,7 +51,7 @@ namespace benzene {
 // turns out to be necessary to subclass node for a Hit-specific purpose.
 //
 
-typedef methyl::Node Hit;
+typedef methyl::Accessor Hit;
 
 } // end namespace benzene
 

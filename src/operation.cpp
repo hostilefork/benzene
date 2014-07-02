@@ -30,7 +30,7 @@ namespace benzene {
 // benzene::OperationBase
 //
 
-methyl::NodeRef<methyl::Node> OperationBase::getDocument() const {
+methyl::Node<methyl::Accessor> OperationBase::getDocument() const {
     WORKER
 
     // Only the worker can call this method on Operation for getting write

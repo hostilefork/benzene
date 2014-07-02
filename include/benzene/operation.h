@@ -37,7 +37,7 @@
 #include <QtWidgets>
 
 #include "methyl/defs.h"
-#include "methyl/node.h"
+#include "methyl/accessor.h"
 
 #include "benzene/application.h"
 
@@ -59,10 +59,10 @@ public:
     virtual ~OperationBase() {}
 
 public:
-    virtual optional<methyl::RootNode<methyl::Error>> invoke() const = 0;
+    virtual optional<methyl::Tree<methyl::Error>> invoke() const = 0;
 
 public:
-    methyl::NodeRef<methyl::Node> getDocument() const;
+    methyl::Node<methyl::Accessor> getDocument() const;
 
 public:
     virtual QString getDescription() const = 0;
@@ -101,8 +101,8 @@ protected:
         return result;
     }
 
-    methyl::NodeRef<typename T::NodeType> getDocument() const {
-        return *methyl::NodeRef<typename T::NodeType>::checked(
+    methyl::Node<typename T::NodeType> getDocument() const {
+        return *methyl::Node<typename T::NodeType>::checked(
             OperationBase::getDocument()
         );
     }
