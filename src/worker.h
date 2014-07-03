@@ -163,6 +163,7 @@ private:
 
 friend class DaemonBase;
 friend bool ::benzene::isDaemonManagerThreadCurrent();
+friend bool wasPauseRequested (unsigned long time);
 private:
     WorkerThread & _workerThread;
 

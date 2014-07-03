@@ -54,6 +54,7 @@ public:
 protected:
     void run();
 
+friend bool wasPauseRequested (unsigned long time);
 private:
     unique_ptr<DaemonManager> _daemonManager;
 

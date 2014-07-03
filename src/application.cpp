@@ -29,8 +29,10 @@
 #include "benzene/operation.h"
 
 #include "worker.h"
+#include "daemonmanager.h"
 #include "rundialog.h"
 #include "hoistdialog.h"
+
 
 using std::vector;
 
@@ -693,6 +695,41 @@ ApplicationBase::~ApplicationBase () {
     emit finalExecCall();
 
     callExecAndCheckResult("shutdown", HERE);
+}
+
+
+bool wasPauseRequested (unsigned long time) {
+
+    // Gui thread should never call into client code that uses this
+    hopefully(not isGuiThreadCurrent(), HERE);
+
+    // Daemon Manager should *definitely* never be calling this...
+    hopefully(not isDaemonManagerThreadCurrent(), HERE);
+
+    if (isWorkerThreadCurrent()) {
+        // Should return the cancel state of the RunDialog if there is one,
+        // otherwise cancellation should not be possible (during rendering
+        // or whatever else is being done on the worker.
+
+        // for now we'll just say false.
+
+        return false;
+    }
+
+    auto & app = getApplication<ApplicationBase>();
+
+    DaemonManager & manager
+        = *(app.getWorker()._daemonManagerThread->_daemonManager);
+
+    ThinkerBase const * thinker
+        = manager.getThinkerForThreadMaybeNull(*QThread::currentThread());
+
+    if (thinker == nullptr) {
+        // not render, not daemon, not gui... who called this, and why?
+        throw hopefullyNotReached(HERE);
+    }
+
+    return thinker->wasPauseRequested(time);
 }
 
 } // end namespace benzene

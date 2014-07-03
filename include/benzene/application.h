@@ -134,6 +134,7 @@ friend class DaemonManager;
 friend class OperationBase;
 friend class DaemonBase;
 friend bool isDaemonManagerThreadCurrent ();
+friend bool wasPauseRequested (unsigned long time);
 private:
     Worker & getWorker () const;
 
@@ -382,6 +383,27 @@ public:
     ~Application () override {
     }
 };
+
+
+// to write generic code that can be called in contexts which
+// either have the potential to be aborted or not, this function
+// is offered globally.  If you are inside a Daemon, you'll get *slightly*
+// better performance by calling the member function because
+// it won't have to detect the thread, but it's probably negligible.
+
+bool wasPauseRequested (unsigned long time = 0);
+
+
+// nasty spinlock, for testing only!
+inline void timedSpinlock(int milliseconds) {
+    QTime timer;
+    timer.start();
+    do
+        {
+        }
+    while (timer.elapsed() < milliseconds);
+}
+
 
 
 // operator<< for OperationStatus
