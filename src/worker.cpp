@@ -140,7 +140,7 @@ Worker::Worker (WorkerThread & workerThread) :
         [&]() {return worker.observerInEffect();}
     );
 
-    _document = Tree<Accessor>::create(globalRootOfDocumentTag);
+    _document = Tree<Accessor>::createWithTag(globalRootOfDocumentTag);
 
     _dummyContext = make_shared<Context>(HERE);
 
