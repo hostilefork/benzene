@@ -58,6 +58,12 @@ Widget::Widget (QWidget * parent, Qt::WindowFlags f) :
     // By default Qt does not send you mouse messages unless a button is
     // pressed; turning mouse tracking on lets us do hover events etc.
     setMouseTracking(true);
+
+    // http://doc.trolltech.com/4.5/draganddrop-draggableicons.html
+    setAcceptDrops(true);
+
+    // http://www.qtcentre.org/forum/f-qt-programming-2/t-qglwidget-keypressevent-does-not-work-22154-post107972.html
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 

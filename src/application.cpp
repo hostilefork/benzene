@@ -30,6 +30,7 @@
 
 #include "worker.h"
 #include "rundialog.h"
+#include "hoistdialog.h"
 
 using std::vector;
 
@@ -169,6 +170,17 @@ void ApplicationBase::onWorkerInitializeComplete () {
     GUI
 
     _runDialog.reset();
+
+    // Should be good to initialize the Hoist system here, though maybe
+    // we can do it even earlier...
+
+    connect(
+        this, &ApplicationBase::hopeFailed,
+        this, &ApplicationBase::onHopeFailed,
+        Qt::BlockingQueuedConnection
+    );
+
+    setHopeFailedHandlerAndReturnOldHandler(&::benzene::onHopeFailed);
 
     // Don't know really the best place to put these signal connections
 
@@ -519,7 +531,6 @@ void ApplicationBase::onNullOperation () {
 }
 
 
-
 void ApplicationBase::onFinalExecCall () {
 
     GUI
@@ -562,6 +573,106 @@ void ApplicationBase::onWorkerShutdownComplete () {
 
     // final time we'll exit the ::exec() loop
     exit(execResultInternal);
+}
+
+
+void ApplicationBase::onHopeFailed (QString message, codeplace cp) {
+    if (not isGuiThreadCurrent()) {
+        qDebug() << "Non-GUI threads need to emit hopeFailed signals.\n";
+        qDebug() << "Pausing so you can attach a debugger.\n";
+        while (true) {
+            // http://www.qtcentre.org/forum/f-qt-programming-2/t-wheres-the-sleep-func-476.html
+            QSemaphore delaySemaphore (0);
+            delaySemaphore.tryAcquire(1, 1000);
+        }
+        *static_cast<int *>(0) = 0304;
+        return;
+    }
+
+    static bool isAlreadyFailing = false;
+    if (isAlreadyFailing) {
+        qDebug() << "Already experiencing a failure.\n";
+        qDebug() << "Pausing so you can attach a debugger.\n";
+
+        while (true) {
+            // http://www.qtcentre.org/forum/f-qt-programming-2/t-wheres-the-sleep-func-476.html
+            QSemaphore delaySemaphore (0);
+            delaySemaphore.tryAcquire(1, 1000);
+        }
+        *static_cast<int *>(0) = 042175;
+        return;
+    }
+    isAlreadyFailing = true;
+
+    _hoistDialog = make_unique<HoistDialog>(
+        cp, message, "Unexpected Condition"
+    );
+
+    connect(
+        _hoistDialog.get(), &HoistDialog::ignoredOnce,
+        this, &ApplicationBase::onIgnoreOnce
+    );
+
+    connect(
+        _hoistDialog.get(), &HoistDialog::ignoredAll,
+        this, &ApplicationBase::onIgnoreAll
+    );
+
+    connect(
+        _hoistDialog.get(), &HoistDialog::restarted,
+        this, &ApplicationBase::onRestart
+    );
+
+    connect(
+        _hoistDialog.get(), &HoistDialog::debugged,
+        this, &ApplicationBase::onDebug
+    );
+
+    QDialog::DialogCode result
+        = static_cast<QDialog::DialogCode>(_hoistDialog->exec());
+
+    switch (result) {
+    case QDialog::Accepted:
+        break;
+    case QDialog::Rejected:
+        break;
+    default:
+        break;
+    }
+
+    isAlreadyFailing = false;
+    _hoistDialog.reset();
+}
+
+
+void ApplicationBase::onIgnoreOnce () {
+    GUI
+
+    _hoistDialog->accept();
+}
+
+
+void ApplicationBase::onIgnoreAll () {
+    GUI
+
+    ignoreHope(_hoistDialog->getCodeplace());
+    _hoistDialog->accept();
+}
+
+
+void ApplicationBase::onRestart () {
+    GUI
+
+    hopefullyNotReached("restart application not implemented", HERE);
+    _hoistDialog->accept();
+}
+
+
+void ApplicationBase::onDebug () {
+    GUI
+
+    *static_cast<int *>(0) = 1020;
+    _hoistDialog->accept();
 }
 
 

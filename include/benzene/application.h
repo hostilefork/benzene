@@ -64,6 +64,8 @@ class OperationStatusBar;
 
 class RunDialog;
 
+class HoistDialog;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -163,6 +165,17 @@ private:
 
     unique_ptr<RunDialog> _runDialog;
 
+
+friend void ignoreHope (codeplace const &);
+friend class HoistDialog;
+private:
+    // An idea behind Hoist is that rather than assertions, checks be given
+    // unique IDs and kept in shipping code.  Because the checks have IDs
+    // they can be triaged without any kind of stack dump.  A dialog offers
+    // developers and users different options for how to deal with a failure.
+
+    std::unordered_set<codeplace> _hopesToIgnore;
+    unique_ptr<HoistDialog> _hoistDialog;
 
 private:
     // If we are exiting our own loops, we send this number instead of "0"
@@ -292,6 +305,31 @@ private slots:
     void onPendingOperation (QString message);
 
     void onNullOperation ();
+
+
+private slots:
+    // The handling of the hoist alerts should really be broken out into a
+    // separate module, but just trying to get everything copied over for
+    // the moment.
+
+    void onIgnoreOnce ();
+
+    void onIgnoreAll ();
+
+    void onRestart ();
+
+    void onDebug ();
+
+signals:
+    void hopeFailed (QString message, codeplace cp);
+
+friend void benzene::onHopeFailed (
+    QString const & message,
+    codeplace const & cp
+);
+
+protected slots:
+    void onHopeFailed (QString message, codeplace cp);
 };
 
 

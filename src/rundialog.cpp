@@ -45,8 +45,6 @@ RunDialog::RunDialog (QWidget *parent)
     _buttonBox->addButton(_cancelButton, QDialogButtonBox::ActionRole);
     _buttonBox->addButton(_terminateButton, QDialogButtonBox::ActionRole);
 
-    // REVIEW: is clicked  the right event?
-    // http://doc.trolltech.com/4.5/qabstractbutton.html#clicked
     connect(
         _cancelButton, &QPushButton::clicked,
         this, &RunDialog::canceled,
