@@ -62,6 +62,8 @@ class Worker;
 
 class OperationStatusBar;
 
+class RunDialog;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -159,7 +161,7 @@ private:
     // to set a timer and bring up a progress dialog if any operation takes
     // too long.  (That includes startup and shutdown of the system.)
 
-    unique_ptr<QProgressDialog> _progress;
+    unique_ptr<RunDialog> _runDialog;
 
 
 private:

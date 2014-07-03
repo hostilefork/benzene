@@ -29,6 +29,7 @@
 #include "benzene/operation.h"
 
 #include "worker.h"
+#include "rundialog.h"
 
 using std::vector;
 
@@ -40,59 +41,6 @@ using methyl::NodePrivate;
 using methyl::Context;
 
 namespace benzene {
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// benzene::OperationProgressDialog
-//
-// For right now, the dialog which is shown during long-running operations is
-// just a basic QProgressDialog.  The framework is not currently set up in
-// such a way to have percentage progress notifications... although it could
-// easily show something like the elapsed time.
-//
-// One idea in the original Benzene framework was to facilitate the termination
-// of operations that were running too long, and to make restoring from the
-// transaction log seem just like any other error from the user interface.
-// This has been lost in the cross-platform transition to Qt, as the
-// transparent relaunching of a process would involve a process API.
-//
-
-class OperationProgressDialog : public QProgressDialog
-{
-    Q_OBJECT
-
-public:
-    OperationProgressDialog (
-        QString const & labelText,
-        QString const & cancelButtonText,
-        int minimum,
-        int maximum,
-        QWidget * parent = 0,
-        Qt::WindowFlags f = 0
-    ) :
-        QProgressDialog (
-            labelText, cancelButtonText, minimum, maximum, parent, f
-        )
-    {
-        setWindowModality(Qt::WindowModal);
-
-        // Hiding the close button doesn't seem to be an easy option; the
-        // given techniques do not work, or cause erratic positioning.  So
-        // instead we should give the close button behavior...or maybe
-        // implement a custom dialog?
-        //
-        // http://stackoverflow.com/questions/16920412/
-
-        // https://bugreports.qt-project.org/browse/QTBUG-26406
-        QTimer::singleShot(1000, this, SLOT(show()));
-    }
-
-    ~OperationProgressDialog () override
-    {
-    }
-};
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -185,13 +133,8 @@ void ApplicationBase::onInitialExecCall () {
     // Here we know we are inside of the QApplication::exec() stack
     // (if that matters, which it might)
 
-    _progress = make_unique<OperationProgressDialog>(
-        "Initializing",
-        "Abort",
-        0,
-        100,
-        nullptr
-    );
+    _runDialog = make_unique<RunDialog>();
+    _runDialog->setProgressString("Initializing...");
 
     connect(
         this, &ApplicationBase::initializeWorker,
@@ -200,6 +143,11 @@ void ApplicationBase::onInitialExecCall () {
 
     connect(
         _workerThread.get(), &WorkerThread::initializeComplete,
+        _runDialog.get(), &RunDialog::requestClose
+    );
+
+    connect(
+        _runDialog.get(), &RunDialog::okayToClose,
         this, &ApplicationBase::onWorkerInitializeComplete
     );
 
@@ -220,7 +168,7 @@ WorkerThread & ApplicationBase::getWorkerThread () const {
 void ApplicationBase::onWorkerInitializeComplete () {
     GUI
 
-    _progress.reset();
+    _runDialog.reset();
 
     // Don't know really the best place to put these signal connections
 
@@ -498,13 +446,8 @@ void ApplicationBase::onBeginInvokeOperation (QString const & message) {
         );
     }
 
-    _progress = make_unique<OperationProgressDialog>(
-        message,
-        "Abort",
-        0,
-        100,
-        &getWorker().getMainWidget()
-    );
+    _runDialog = make_unique<RunDialog>(&getWorker().getMainWidget());
+    _runDialog->setProgressString(message);
 }
 
 
@@ -515,15 +458,22 @@ void ApplicationBase::onEndInvokeOperation (
 
     GUI
 
-    _progress.reset();
+    connect(
+        _runDialog.get(), &RunDialog::okayToClose,
+        this, [&]() {
+            _runDialog.reset();
 
-    for (OperationStatusBar * statusBar : _statusBars) {
-        if (success) {
-            statusBar->showInformation(message);
-        } else {
-            statusBar->showError(message);
+            for (OperationStatusBar * statusBar : _statusBars) {
+                if (success) {
+                    statusBar->showInformation(message);
+                } else {
+                    statusBar->showError(message);
+                }
+            }
         }
-    }
+    );
+
+    _runDialog->requestClose();
 }
 
 
@@ -574,12 +524,9 @@ void ApplicationBase::onFinalExecCall () {
 
     GUI
 
-    _progress = make_unique<OperationProgressDialog>(
-        "Can shut down more cleanly if you wait a second...",
-        "Nope",
-        0,
-        100,
-        nullptr
+    _runDialog = make_unique<RunDialog>();
+    _runDialog->setProgressString(
+        "Can shut down cleanly if you wait a second..."
     );
 
     // We don't actually quit on the first time the event loop is exited
@@ -596,6 +543,11 @@ void ApplicationBase::onFinalExecCall () {
 
     connect(
         _workerThread.get(), &WorkerThread::shutdownComplete,
+        _runDialog.get(), &RunDialog::requestClose
+    );
+
+    connect(
+        _runDialog.get(), &RunDialog::okayToClose,
         this, &ApplicationBase::onWorkerShutdownComplete
     );
 
@@ -606,10 +558,10 @@ void ApplicationBase::onFinalExecCall () {
 void ApplicationBase::onWorkerShutdownComplete () {
     GUI
 
+    _runDialog.reset();
+
     // final time we'll exit the ::exec() loop
     exit(execResultInternal);
-
-    _progress.reset();
 }
 
 
@@ -634,6 +586,3 @@ ApplicationBase::~ApplicationBase () {
 
 } // end namespace benzene
 
-
-// https://qt-project.org/forums/viewthread/12689
-#include "benzeneapplication.moc"
